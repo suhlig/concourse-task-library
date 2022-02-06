@@ -3,7 +3,7 @@ platform: linux
 
 image_resource:
   type: docker-image
-  source: { repository: rust }
+  source: { repository: alpine }
 
 inputs:
   - name: binaries
@@ -17,8 +17,10 @@ outputs:
 
 run:
   dir: binaries
-  path: bash
+  path: ash
   args:
     - -c
     - |
+      set -euo pipefail
+      apk add xz
       tar --verbose --create --xz --file=../compressed/"$prefix"-"$target".tar.xz *

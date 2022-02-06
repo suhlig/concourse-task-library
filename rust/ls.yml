@@ -3,7 +3,7 @@ platform: linux
 
 image_resource:
   type: docker-image
-  source: { repository: rust }
+  source: { repository: alpine }
 
 inputs:
   - name: linux
@@ -12,10 +12,11 @@ inputs:
 
 run:
   dir: source
-  path: bash
+  path: ash
   args:
     - -c
     - |
+      set -euo pipefail
       for platform in linux windows darwin; do
         ls -al "$platform"
       done
