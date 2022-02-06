@@ -1,0 +1,25 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source: { repository: alpine }
+
+inputs:
+  - name: source
+
+params:
+  project_name:
+
+outputs:
+  - name: message
+
+run:
+  path: ash
+  args:
+  - -c
+  - |
+    set -euo pipefail
+    ref=$(cat source/.git/ref)
+    [ -z "$project_name" ] && echo "Error: project_name must not be empty" && exit 1
+    echo "Version $ref of $project_name was just released." | tee message/new-release.txt
