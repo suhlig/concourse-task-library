@@ -13,6 +13,7 @@ caches: # https://doc.rust-lang.org/cargo/guide/cargo-home.html#caching-the-carg
   - path: .cargo/registry/index/
   - path: .cargo/registry/cache/
   - path: .cargo/git/db/
+  - path: source/target
 
 run:
   dir: source
@@ -20,5 +21,6 @@ run:
   args:
     - -c
     - |
+      export CARGO_HOME=$(readlink -f ../.cargo)
       rustup component add clippy # TODO Create an image that already has the latest clippy
       cargo clippy

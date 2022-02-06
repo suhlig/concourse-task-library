@@ -22,5 +22,5 @@ run:
     - -c
     - |
       set -euo pipefail
-      apk add xz
+      apk add xz # TODO Create an image that has xz
       tar --verbose --create --xz --file=../compressed/"$prefix"-"$target".tar.xz *
