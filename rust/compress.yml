@@ -22,5 +22,6 @@ run:
     - -c
     - |
       set -euo pipefail
+      [ -z "$prefix" ] && echo "Error: prefix must not be empty" && exit 1
       apk add xz # TODO Create an image that has xz
       tar --verbose --create --xz --file=../compressed/"$prefix"-"$target".tar.xz *
