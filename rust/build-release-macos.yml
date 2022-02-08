@@ -1,0 +1,32 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: joseluisq/rust-linux-darwin-builder
+    tag: 1.58.1
+
+inputs:
+  - name: source
+
+outputs:
+  - name: binaries
+
+caches: # https://doc.rust-lang.org/cargo/guide/cargo-home.html#caching-the-cargo-home-in-ci
+  - path: .cargo/bin/
+  - path: .cargo/registry/index/
+  - path: .cargo/registry/cache/
+  - path: .cargo/git/db/
+  - path: source/target
+
+run:
+  dir: source
+  path: bash
+  args:
+    - -c
+    - |
+      export CARGO_HOME=$(readlink -f ../.cargo)
+      cp "$HOME/.cargo/config" "$CARGO_HOME/" # https://github.com/joseluisq/rust-linux-darwin-builder#cargo-home-advice
+      cargo build --release --target x86_64-apple-darwin
+      find target/"$target"/release/ -maxdepth 1 -type f -executable -exec cp {} ../binaries \;
