@@ -1,0 +1,19 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source: { repository: goreleaser/goreleaser }
+
+inputs:
+  - name: source
+
+params:
+  GITHUB_TOKEN:
+
+run:
+  path: bash
+  args:
+  - -c
+  - |
+    cd source && goreleaser release

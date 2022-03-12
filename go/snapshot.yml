@@ -1,0 +1,21 @@
+---
+platform: linux
+
+image_resource:
+  type: registry-image
+  source: { repository: goreleaser/goreleaser }
+
+inputs:
+  - name: source
+
+outputs:
+  - name: snapshots
+
+run:
+  path: bash
+  args:
+  - -c
+  - |
+    cd source
+    goreleaser --snapshot
+    cp dist/*.tar.gz ../snapshots
