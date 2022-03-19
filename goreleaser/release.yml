@@ -11,9 +11,13 @@ inputs:
 params:
   GITHUB_TOKEN:
 
+outputs:
+  - name: dist
+
 run:
   path: bash
   args:
   - -c
   - |
     cd source && goreleaser release
+    cp cp -R source/dist/. dist/
