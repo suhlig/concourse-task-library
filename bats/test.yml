@@ -14,10 +14,11 @@ inputs:
 params:
   TERM: linux
   TEST_DIR: source/test
-  PROGRAM_UNDER_TEST: # release-content/tasmota-sensor-bridge
+  PROGRAM_UNDER_TEST:
 
 run:
-  path: bats
+  path: bash
   args:
-    - --print-output-on-failure
-    - "$TEST_DIR"
+    - -c
+    - |
+      bats --print-output-on-failure "$TEST_DIR"
