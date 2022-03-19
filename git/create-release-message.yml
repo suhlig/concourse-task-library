@@ -24,7 +24,7 @@ run:
     ref=$(cat source/.git/ref)
     [ -z "$project_name" ] && echo "Error: project_name must not be empty" && exit 1
 
-    if [ -z "$release_url" ]; do
+    if [ -z "$release_url" ]; then
       echo "Version $ref of $project_name was just released" | tee message/new-release.txt
     else
       echo "Version $ref of $project_name was just released to $release_url" | tee message/new-release.txt
