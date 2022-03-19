@@ -16,8 +16,9 @@ outputs:
 
 run:
   path: bash
+  dir: source
   args:
   - -c
   - |
-    cd source && goreleaser release
-    cp cp -R source/dist/. dist/
+    goreleaser release
+    cp -R dist/. ../dist/
