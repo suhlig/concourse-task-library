@@ -1,0 +1,23 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source: { repository: bats/bats }
+
+inputs:
+  - name: release-content
+  - name: source
+  - name: bats-assert
+  - name: bats-support
+
+params:
+  TERM: linux
+  TEST_DIR: source/test
+  PROGRAM_UNDER_TEST: # release-content/tasmota-sensor-bridge
+
+run:
+  path: bats
+  args:
+    - --print-output-on-failure
+    - "$TEST_DIR"
