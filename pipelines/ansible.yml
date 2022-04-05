@@ -26,7 +26,6 @@ resources:
     icon: file-tree
     source: &github
       uri: git@github.com:suhlig/concourse-task-library.git
-      branch: add-ansible
       private_key: ((secrets.github.ssh_key))
 
   - name: image-source
