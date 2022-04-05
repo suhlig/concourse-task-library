@@ -1,0 +1,56 @@
+jobs:
+  - name: build-ginkgo-image
+    plan:
+      - in_parallel:
+        - get: ginkgo-image-source
+          trigger: true
+        - get: ginkgo-release
+          trigger: true
+        - get: lib
+      - load_var: ginkgo-version
+        file: ginkgo-release/version
+      - task: build-image
+        privileged: true
+        file: lib/tasks/oci/build-image.yml
+        input_mapping: { source: ginkgo-image-source }
+        params:
+          CONTEXT: source/images/ginkgo
+          BUILD_ARG_VERSION: v((.:ginkgo-version))
+        output_mapping: { image: image }
+      - put: ginkgo-image
+        params:
+          image: image/image.tar
+          version: ((.:ginkgo-version)) # follows the version of ginkgo-release
+          bump_aliases: true
+
+resources:
+  - name: lib
+    type: git
+    icon: file-tree
+    source: &github
+      uri: git@github.com:suhlig/concourse-task-library.git
+      branch: add-ginkgo
+      private_key: ((secrets.github.ssh_key))
+
+  - name: ginkgo-image-source
+    type: git
+    icon: github-circle
+    source:
+      <<: *github
+      paths: [ images/ginkgo/Dockerfile ]
+      fetch_tags: true
+
+  - name: ginkgo-image
+    type: registry-image
+    icon: docker
+    source:
+      repository: uhligit/ginkgo
+      username: suhlig
+      password: ((secrets.dockerhub.authtoken))
+
+  - name: ginkgo-release
+    type: github-release
+    icon: package-down
+    source:
+      user: onsi
+      repository: ginkgo

@@ -11,6 +11,10 @@ inputs:
 params:
   CONTEXT: source
   UNPACK_ROOTFS: true
+  BUILD_ARG_VERSION:
+
+caches:
+  - path: cache
 
 outputs:
   - name: image
