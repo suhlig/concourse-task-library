@@ -1,5 +1,5 @@
 jobs:
-  - name: build-image
+  - name: build-ansible-image
     plan:
       - in_parallel:
         - get: image-source
@@ -10,7 +10,7 @@ jobs:
         file: lib/tasks/oci/build-image.yml
         input_mapping: { source: image-source }
         params:
-          CONTEXT: image-source/images/ansible
+          CONTEXT: source/images/ansible
         output_mapping: { image: image }
       - load_var: image-version
         file: image-source/.git/describe_ref # populated by the git-resource
@@ -21,14 +21,21 @@ jobs:
           bump_aliases: true
 
 resources:
+  - name: lib
+    type: git
+    icon: file-tree
+    source: &github
+      uri: git@github.com:suhlig/concourse-task-library.git
+      branch: add-ansible
+      private_key: ((secrets.github.ssh_key))
+
   - name: image-source
     type: git
     icon: github-circle
-    source: &github
-      uri: git@github.com:suhlig/concourse-task-store.git
-      branch: add-ansible
-      private_key: ((github.ssh_key))
+    source:
+      <<: *github
       paths: [ images/ansible/Dockerfile ]
+      fetch_tags: true
 
   - name: image
     type: registry-image
@@ -36,11 +43,4 @@ resources:
     source:
       repository: uhligit/ansible
       username: suhlig
-      password: ((dockerhub.authtoken))
-
-  - name: task-store
-    type: git
-    icon: file-tree
-    source:
-      uri: git@github.com:suhlig/concourse-task-store.git
-      private_key: ((github.ssh_key))
+      password: ((secrets.dockerhub.authtoken))

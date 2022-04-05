@@ -1,0 +1,14 @@
+#!/bin/bash
+
+set -euo pipefail
+IFS=$'\n\t'
+
+SCRIPT_PATH=$(dirname "$(realpath -s "$0")")
+
+spruce merge "${SCRIPT_PATH}"/pipelines/*.yml \
+| fly \
+    set-pipeline \
+    --target "$CONCOURSE_TARGET" \
+    --pipeline=task-library \
+    --yaml-var=secrets="$SECRETS" \
+    --config - \
