@@ -53,4 +53,4 @@ resources:
     source:
       user: onsi
       repository: ginkgo
-      access_token: ((github.access_token))
+      access_token: ((secrets.github.access_token))
