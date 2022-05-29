@@ -24,7 +24,7 @@ run:
 
     # Trust Concourse to tell which tag is to be built. goreleaser has issues
     # picking the right tag if two or more point to the same commit.
-    GORELEASER_CURRENT_TAG=$(cat source/.git/ref)
+    GORELEASER_CURRENT_TAG=$(cat ../source/.git/ref)
     export GORELEASER_CURRENT_TAG
 
     goreleaser release
