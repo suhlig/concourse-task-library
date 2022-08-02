@@ -20,4 +20,4 @@ run:
   args:
   - -c
   - |
-    goreleaser build --snapshot --single-target --output ../snapshots/"$BINARY"
+    goreleaser build --snapshot --single-target --output ../snapshot/"$BINARY"
