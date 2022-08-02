@@ -8,6 +8,7 @@ image_resource:
 inputs:
   - name: source
   - name: base-image # https://github.com/concourse/oci-build-task/pull/52#issuecomment-892907161
+    optional: true
 
 params:
   CONTEXT: source
