@@ -17,5 +17,5 @@ run:
   - -c
   - |
     cd source
-    goreleaser --snapshot --single-target
+    goreleaser build --snapshot --single-target
     cp dist/*.tar.gz ../snapshots
