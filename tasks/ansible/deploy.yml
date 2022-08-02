@@ -15,15 +15,15 @@ params:
   VAULT_PASSWORD:
   SSH_KEY:
   EXTRA_VARS: # e.g. service_binary=release/plaintweet
-  REQUIREMENTS_YAML_PATH: playbook/requirements.yml
-  PLAYBOOK_YAML_PATH: playbook/playbook.yml
+  PLAYBOOK_PATH: playbook
 
 run:
   path: sh
   args:
   - -c
   - |
-    ansible-galaxy install --role-file "$REQUIREMENTS_YAML_PATH"
+    export ANSIBLE_CONFIG="$PLAYBOOK_PATH"/ansible.cfg
+    ansible-galaxy install --role-file "$PLAYBOOK_PATH"/requirements.yml
 
     mkdir ~/.ssh
     echo "$SSH_KEY" > ~/.ssh/id_rsa
@@ -32,7 +32,7 @@ run:
 
     echo "$VAULT_PASSWORD" > .vault_password
     ansible-playbook \
-      "$PLAYBOOK_YAML_PATH" \
+      "$PLAYBOOK_PATH"/playbook.yml \
       --inventory "$INVENTORY," \
       --extra-vars "$EXTRA_VARS" \
       --vault-password-file .vault_password
