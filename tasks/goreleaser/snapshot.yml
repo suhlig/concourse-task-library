@@ -8,14 +8,16 @@ image_resource:
 inputs:
   - name: source
 
+params:
+  BINARY:
+
 outputs:
-  - name: snapshots
+  - name: snapshot
 
 run:
   path: bash
+  dir: source
   args:
   - -c
   - |
-    cd source
-    goreleaser build --snapshot --single-target
-    cp dist/*.tar.gz ../snapshots
+    goreleaser build --snapshot --single-target --output ../snapshots/"$BINARY"
