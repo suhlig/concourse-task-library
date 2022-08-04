@@ -18,7 +18,7 @@ params:
   PLAYBOOK_PATH: playbook
 
 run:
-  path: sh
+  path: zsh
   args:
   - -c
   - |
@@ -30,9 +30,14 @@ run:
     chmod 600 ~/.ssh/id_rsa
     ssh-keyscan -H "$INVENTORY" >> ~/.ssh/known_hosts
 
+    # jinja2-cli does not understand <(echo "$EXTRA_VARS")
+    echo "$EXTRA_VARS" > extra-variables.j2.yml
+    jinja2 -D pwd="$PWD" extra-variables.j2.yml -o extra-variables.yml
+
     echo "$VAULT_PASSWORD" > .vault_password
+
     ansible-playbook \
       "$PLAYBOOK_PATH"/playbook.yml \
       --inventory "$INVENTORY," \
-      --extra-vars "$EXTRA_VARS" \
+      --extra-vars @extra-variables.yml \
       --vault-password-file .vault_password

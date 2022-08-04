@@ -33,7 +33,7 @@ resources:
     source: &github
       uri: git@github.com:suhlig/concourse-task-library.git
       private_key: ((secrets.github.ssh_key))
-      branch: main
+      branch: ((ci-branch))
 
   - name: ansible-image-source
     type: git
