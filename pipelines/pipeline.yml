@@ -12,8 +12,23 @@ jobs:
       - in_parallel:
         - load_var: package-info
           file: ansible-pypi-package/info.json
-        - load_var: image-version
+        - load_var: image-source-version
           file: ansible-image-source/.git/describe_ref # populated by the git-resource
+      - task: print-version-numbers
+        config:
+          platform: linux
+          image_resource:
+            type: mock
+            source: { mirror_self: true }
+          params:
+            ANSIBLE_VERSION: ((.:package-info.version))
+            IMAGE_VERSION: ((.:image-source-version))
+          run:
+            path: sh
+            args:
+              - -c
+              - |
+                echo Packaging "$ANSIBLE_VERSION" and tagging image uhligit/ansible with "$IMAGE_VERSION"
       - task: build-image
         privileged: true
         file: lib/tasks/oci/build-image.yml
@@ -28,7 +43,30 @@ jobs:
       - put: ansible-image
         params:
           image: image/image.tar
-          version: ((.:image-version))
+          version: ((.:image-source-version))
+          bump_aliases: true
+  - name: build-ginkgo-image
+    plan:
+      - in_parallel:
+        - get: ginkgo-image-source
+          trigger: true
+        - get: ginkgo-release
+          trigger: true
+        - get: lib
+      - load_var: ginkgo-version
+        file: ginkgo-release/version
+      - task: build-image
+        privileged: true
+        file: lib/tasks/oci/build-image.yml
+        input_mapping: { source: ginkgo-image-source }
+        params:
+          CONTEXT: source/images/ginkgo
+          BUILD_ARG_VERSION: v((.:ginkgo-version))
+        output_mapping: { image: image }
+      - put: ginkgo-image
+        params:
+          image: image/image.tar
+          version: ((.:ginkgo-version)) # follows the version of ginkgo-release
           bump_aliases: true
 
 resources:
@@ -68,6 +106,30 @@ resources:
     type: pypi
     source:
       package: ansible
+
+  - name: ginkgo-image-source
+    type: git
+    icon: github-circle
+    source:
+      <<: *github
+      paths: [ images/ginkgo/Dockerfile ]
+      fetch_tags: true
+
+  - name: ginkgo-image
+    type: registry-image
+    icon: docker
+    source:
+      repository: uhligit/ginkgo
+      username: suhlig
+      password: ((secrets.dockerhub.authtoken))
+
+  - name: ginkgo-release
+    type: github-release
+    icon: package-down
+    source:
+      user: onsi
+      repository: ginkgo
+      access_token: ((secrets.github.access_token))
 
 resource_types:
   - name: pypi
