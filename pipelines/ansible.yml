@@ -6,6 +6,8 @@ jobs:
           trigger: true
         - get: ansible-pypi-package
           trigger: true
+        - get: python-image
+          params: { format: oci }
         - get: lib
       - in_parallel:
         - load_var: package-info
@@ -15,10 +17,13 @@ jobs:
       - task: build-image
         privileged: true
         file: lib/tasks/oci/build-image.yml
-        input_mapping: { source: ansible-image-source }
+        input_mapping:
+          source: ansible-image-source
+          base-image: python-image
         params:
           CONTEXT: source/images/ansible
           BUILD_ARG_VERSION: ((.:package-info.version))
+          IMAGE_ARG_base_image: base-image/image.tar
         output_mapping: { image: image }
       - put: ansible-image
         params:
@@ -46,10 +51,18 @@ resources:
   - name: ansible-image
     type: registry-image
     icon: docker
-    source:
+    source: &dockerhub
       repository: uhligit/ansible
       username: suhlig
       password: ((secrets.dockerhub.authtoken))
+
+  - name: python-image
+    type: registry-image
+    icon: docker
+    source:
+      <<: *dockerhub
+      repository: python
+      tag: alpine
 
   - name: ansible-pypi-package
     type: pypi
