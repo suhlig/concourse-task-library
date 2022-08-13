@@ -1,6 +1,6 @@
 ARG base_image=python:alpine
 FROM ${base_image}
-RUN apk add build-base git libffi-dev openssh-client zsh
+RUN apk add build-base git libffi-dev openssh-client yq zsh
 ARG VERSION
 RUN pip install \
           --no-cache-dir \

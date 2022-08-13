@@ -9,35 +9,14 @@ image_resource:
 inputs:
   - name: release
   - name: playbook
+  - name: lib
 
 params:
-  INVENTORY:
+  INVENTORY: # hostname or name of YAML file
   VAULT_PASSWORD:
   SSH_KEY:
   EXTRA_VARS: # e.g. service_binary=release/plaintweet
   PLAYBOOK_PATH: playbook
 
 run:
-  path: zsh
-  args:
-  - -c
-  - |
-    export ANSIBLE_CONFIG="$PLAYBOOK_PATH"/ansible.cfg
-    ansible-galaxy install --role-file "$PLAYBOOK_PATH"/requirements.yml
-
-    mkdir ~/.ssh
-    echo "$SSH_KEY" > ~/.ssh/id_rsa
-    chmod 600 ~/.ssh/id_rsa
-    ssh-keyscan -H "$INVENTORY" >> ~/.ssh/known_hosts
-
-    # jinja2-cli does not understand <(echo "$EXTRA_VARS")
-    echo "$EXTRA_VARS" > extra-variables.j2.yml
-    jinja2 -D pwd="$PWD" extra-variables.j2.yml -o extra-variables.yml
-
-    echo "$VAULT_PASSWORD" > .vault_password
-
-    ansible-playbook \
-      "$PLAYBOOK_PATH"/playbook.yml \
-      --inventory "$INVENTORY," \
-      --extra-vars @extra-variables.yml \
-      --vault-password-file .vault_password
+  path: lib/tasks/ansible/deploy.zsh
