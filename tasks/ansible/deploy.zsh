@@ -9,10 +9,11 @@ mkdir ~/.ssh
 echo "$SSH_KEY" > ~/.ssh/id_rsa
 chmod 600 ~/.ssh/id_rsa
 
-if [ -f "$INVENTORY" ]; then # it's a file; assume YAML
-  for host in $(yq eval '.all.hosts.* | key' "$PLAYBOOK_PATH"/inventory.yml ); do
+if [ -f "$PLAYBOOK_PATH"/"$INVENTORY" ]; then # it's a file; assume YAML
+  for host in $(yq eval '.all.hosts.* | key' "$PLAYBOOK_PATH"/"$INVENTORY" ); do
     ssh-keyscan -H "$host" >> ~/.ssh/known_hosts
   done
+  INVENTORY="$PLAYBOOK_PATH"/"$INVENTORY"
 else # it's a string; assume single host
   ssh-keyscan -H "$INVENTORY" >> ~/.ssh/known_hosts
   INVENTORY="$INVENTORY", # if it's not a file, append a comma in order to mark it as list
