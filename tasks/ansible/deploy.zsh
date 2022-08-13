@@ -10,7 +10,7 @@ echo "$SSH_KEY" > ~/.ssh/id_rsa
 chmod 600 ~/.ssh/id_rsa
 
 if [ -f "$INVENTORY" ]; then # it's a file; assume YAML
-  for host in $(yq eval '.all.hosts.* | key' deployment/inventory.yml ); do
+  for host in $(yq eval '.all.hosts.* | key' "$PLAYBOOK_PATH"/inventory.yml ); do
     ssh-keyscan -H "$host" >> ~/.ssh/known_hosts
   done
 else # it's a string; assume single host
