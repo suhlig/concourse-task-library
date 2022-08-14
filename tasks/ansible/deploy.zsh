@@ -59,9 +59,9 @@ configure-ssh() {
 
 run-play() {
   ansible-playbook \
-    --playbook-dir "$PLAYBOOK_PATH" \
     --extra-vars @extra-variables.yml \
-    --vault-password-file .vault_password
+    --vault-password-file .vault_password \
+    "$PLAYBOOK_PATH"/playbook.yml
 }
 
 main "$@"
