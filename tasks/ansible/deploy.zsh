@@ -23,7 +23,7 @@ configure-vault-password() {
 configure-inventory() {
   if [ -f "$PLAYBOOK_PATH"/"$INVENTORY" ]; then
     # It's a file
-    export ANSIBLE_INVENTORY=="$PLAYBOOK_PATH"/"$INVENTORY"
+    export ANSIBLE_INVENTORY="$PLAYBOOK_PATH"/"$INVENTORY"
   else
     # It's a string; assume list of hosts. We append a comma in order to make it a list, even if there is only one host.
     export ANSIBLE_INVENTORY="$INVENTORY",
