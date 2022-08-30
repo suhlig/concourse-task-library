@@ -61,7 +61,7 @@ run-play() {
   ansible-playbook \
     --extra-vars @extra-variables.yml \
     --vault-password-file .vault_password \
-    "$PLAYBOOK_PATH"/playbook.yml
+    "$PLAYBOOK_PATH"/"$PLAYBOOK_NAME"
 }
 
 main "$@"

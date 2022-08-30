@@ -17,6 +17,7 @@ params:
   SSH_KEY:
   EXTRA_VARS: # e.g. service_binary=release/plaintweet
   PLAYBOOK_PATH: playbook # where to find {playbook,inventory,requirements}.yml and ansible.cfg
+  PLAYBOOK_NAME: playbook.yml
 
 run:
   path: lib/tasks/ansible/deploy.zsh
