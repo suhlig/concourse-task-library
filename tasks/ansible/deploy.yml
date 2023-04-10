@@ -15,7 +15,7 @@ params:
   INVENTORY: # hostname or name of YAML file
   VAULT_PASSWORD:
   SSH_KEY:
-  EXTRA_VARS: # e.g. service_binary=release/plaintweet
+  EXTRA_VARS: {} # e.g. service_binary=release/plaintweet
   PLAYBOOK_PATH: playbook # where to find {playbook,inventory,requirements}.yml and ansible.cfg
   PLAYBOOK_NAME: playbook.yml
 
