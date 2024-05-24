@@ -1,23 +1,18 @@
----
 platform: linux
-
 image_resource:
   type: docker-image
   source:
     repository: uhligit/ansible
-
 inputs:
-  - name: release
-  - name: playbook
   - name: lib
-
+  - name: playbook
+  - name: ssh-config
+    optional: true
 params:
   INVENTORY: # hostname or name of YAML file
   VAULT_PASSWORD:
+  PLAYBOOK_PATH: playbook # where to find {playbook,inventory,requirements}.yml and ansible.cfg
   SSH_KEY:
   EXTRA_VARS: {} # e.g. service_binary=release/plaintweet
-  PLAYBOOK_PATH: playbook # where to find {playbook,inventory,requirements}.yml and ansible.cfg
-  PLAYBOOK_NAME: playbook.yml
-
-run:
-  path: lib/tasks/ansible/deploy.zsh
+outputs: [ name: ssh-config ]
+run: { path: lib/tasks/ansible/ssh-known-hosts/task.zsh }

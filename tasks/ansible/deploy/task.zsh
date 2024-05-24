@@ -8,7 +8,6 @@ main() {
   configure-inventory
   configure-extra-vars
   install-roles
-  configure-ssh
   run-play
 }
 
@@ -39,22 +38,6 @@ configure-extra-vars() {
 
 install-roles() {
   ansible-galaxy install --role-file "$PLAYBOOK_PATH"/requirements.yml
-}
-
-configure-ssh() {
-  mkdir -p ~/.ssh
-  echo "$SSH_KEY" > ~/.ssh/id_rsa
-  chmod 600 ~/.ssh/id_rsa
-
-  # Trust all servers' public keys.
-  # Defaults to the empty string if not present.
-  ansible-inventory \
-    --list \
-    --playbook-dir "$PLAYBOOK_PATH" \
-    --extra-vars @extra-variables.yml \
-    --vault-password-file .vault_password \
-  | yq eval '._meta.hostvars.*.public_key // ""' - \
-  >> ~/.ssh/known_hosts
 }
 
 run-play() {
