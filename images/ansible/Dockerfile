@@ -5,7 +5,6 @@ RUN apk add \
         git \
         libffi-dev \
         openssh-client \
-        rsync \
         yq \
         zsh
 ARG VERSION
