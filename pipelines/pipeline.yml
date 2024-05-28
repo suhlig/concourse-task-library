@@ -1,36 +1,20 @@
 jobs:
   - name: build-ansible-image
     plan:
+      - get: ansible-pypi-package
+        trigger: true
+      - load_var: package-info
+        file: ansible-pypi-package/info.json
       - in_parallel:
         - get: ansible-image-source
-          trigger: true
-        - get: ansible-pypi-package
           trigger: true
         - get: python-image
           params: { format: oci }
           trigger: true
         - get: lib
         - get: oci-task-image
-      - in_parallel:
-        - load_var: package-info
-          file: ansible-pypi-package/info.json
-        - load_var: image-source-version
-          file: ansible-image-source/.git/describe_ref # populated by the git-resource
-      - task: print-version-numbers
-        config:
-          platform: linux
-          image_resource:
-            type: mock
-            source: { mirror_self: true }
-          params:
-            ANSIBLE_VERSION: ((.:package-info.version))
-            IMAGE_VERSION: ((.:image-source-version))
-          run:
-            path: sh
-            args:
-              - -c
-              - |
-                echo Packaging Ansible v"$ANSIBLE_VERSION" and tagging image with "$IMAGE_VERSION"
+      - load_var: python-image-digest
+        file: python-image/digest
       - task: build-image
         privileged: true
         file: lib/tasks/oci/build-image.yml
@@ -43,11 +27,29 @@ jobs:
           BUILD_ARG_VERSION: ((.:package-info.version))
           IMAGE_ARG_base_image: base-image/image.tar
         output_mapping: { image: image }
+      - get: ansible-image-version
+        params: { bump: patch }
+      - load_var: ansible-image-version
+        file: ansible-image-version/version
       - put: ansible-image
         params:
           image: image/image.tar
-          version: ((.:image-source-version))
+          version: ((.:ansible-image-version))
           bump_aliases: true
+      - put: ansible-image-version
+        params: { file: ansible-image-version/version }
+      - task: print-version-numbers
+        config:
+          platform: linux
+          image_resource:
+            type: mock
+            source: { mirror_self: true }
+          run:
+            path: sh
+            args:
+              - -c
+              - |
+                echo Published Python image ((.:python-image-digest)) and Ansible ((.:package-info.version)) as uhligit/ansible:((.:ansible-image-version))
   - name: build-ginkgo-image
     plan:
       - in_parallel:
@@ -60,26 +62,8 @@ jobs:
         - get: golang-image
           params: { format: oci }
           trigger: true
-      - in_parallel:
-        - load_var: ginkgo-version
-          file: ginkgo-release/version
-        - load_var: image-source-version
-          file: ginkgo-image-source/.git/describe_ref # populated by the git-resource
-      - task: print-version-numbers
-        config:
-          platform: linux
-          image_resource:
-            type: mock
-            source: { mirror_self: true }
-          params:
-            GINKGO_VERSION: ((.:ginkgo-version))
-            IMAGE_VERSION: ((.:image-source-version))
-          run:
-            path: sh
-            args:
-              - -c
-              - |
-                echo Packaging Ginkgo v"$GINKGO_VERSION" and tagging image with "$IMAGE_VERSION"
+      - load_var: ginkgo-version
+        file: ginkgo-release/version
       - task: build-image
         privileged: true
         file: lib/tasks/oci/build-image.yml
@@ -92,37 +76,42 @@ jobs:
           BUILD_ARG_VERSION: v((.:ginkgo-version))
           IMAGE_ARG_base_image: base-image/image.tar
         output_mapping: { image: image }
+      - get: ginkgo-image-version
+        params: { bump: patch }
+      - load_var: ginkgo-image-version
+        file: ginkgo-image-version/version
       - put: ginkgo-image
         params:
           image: image/image.tar
-          version: ((.:image-source-version))
+          version: ((.:ginkgo-image-version))
           bump_aliases: true
-  - name: build-rsync-image
-    plan:
-      - in_parallel:
-        - get: rsync-image-source
-          trigger: true
-        - get: lib
-        - get: oci-task-image
-        - get: alpine-image
-          params: { format: oci }
-          trigger: true
-      - load_var: image-source-version
-        file: rsync-image-source/.git/describe_ref # populated by the git-resource
+      - put: ginkgo-image-version
+        params:
+          file: ginkgo-image-version/version
+      - load_var: golang-version
+        file: golang-image/tag
       - task: print-version-numbers
         config:
           platform: linux
           image_resource:
             type: mock
             source: { mirror_self: true }
-          params:
-            IMAGE_VERSION: ((.:image-source-version))
           run:
             path: sh
             args:
               - -c
               - |
-                echo Packaging rsync and tagging image with "$IMAGE_VERSION"
+                echo Published Golang v((.:golang-version)) and Ginkgo v((.:ginkgo-version)) as uhligit/ginkgo:((.:ginkgo-image-version))
+  - name: build-rsync-image
+    plan:
+      - get: rsync-image-source
+        trigger: true
+      - in_parallel:
+        - get: lib
+        - get: oci-task-image
+        - get: alpine-image
+          params: { format: oci }
+          trigger: true
       - task: build-image
         privileged: true
         file: lib/tasks/oci/build-image.yml
@@ -134,11 +123,31 @@ jobs:
           CONTEXT: source/images/rsync
           IMAGE_ARG_base_image: base-image/image.tar
         output_mapping: { image: image }
+      - get: rsync-image-version
+        params: { bump: patch }
+      - load_var: rsync-image-version
+        file: rsync-image-version/version
       - put: rsync-image
         params:
           image: image/image.tar
-          version: ((.:image-source-version))
+          version: ((.:rsync-image-version))
           bump_aliases: true
+      - put: rsync-image-version
+        params: { file: rsync-image-version/version }
+      - load_var: alpine-image-digest
+        file: alpine-image/digest
+      - task: print-version-numbers
+        config:
+          platform: linux
+          image_resource:
+            type: mock
+            source: { mirror_self: true }
+          run:
+            path: sh
+            args:
+              - -c
+              - |
+                echo Published rsync as it is part of the Alpine image ((.:alpine-image-digest)) as uhligit/rsync:((.:rsync-image-version))
 resources:
   - name: lib
     type: git
@@ -154,6 +163,14 @@ resources:
       <<: *github
       paths: [ images/ansible/Dockerfile ]
       fetch_tags: true
+  - name: ansible-image-version
+    type: semver
+    source:
+      <<: *github
+      driver: git
+      branch: meta
+      file: ansible-image-version
+      initial_version: 1.0.0
   - name: ansible-image
     type: registry-image
     icon: docker
@@ -185,6 +202,14 @@ resources:
       <<: *github
       paths: [ images/ginkgo/Dockerfile ]
       fetch_tags: true
+  - name: ginkgo-image-version
+    type: semver
+    source:
+      <<: *github
+      driver: git
+      branch: meta
+      file: ginkgo-image-version
+      initial_version: 1.0.0
   - name: ginkgo-image
     type: registry-image
     icon: docker
@@ -217,6 +242,14 @@ resources:
       <<: *github
       paths: [ images/rsync/Dockerfile ]
       fetch_tags: true
+  - name: rsync-image-version
+    type: semver
+    source:
+      <<: *github
+      driver: git
+      branch: meta
+      file: rsync-image-version
+      initial_version: 1.0.0
   - name: rsync-image
     type: registry-image
     icon: docker
