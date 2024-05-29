@@ -18,6 +18,7 @@ run:
     rsync \
         --progress \
         --recursive \
+        --delete \
         --rsh 'ssh -o UserKnownHostsFile=ssh-config/known_hosts -o IdentityFile=ssh-config/id' \
       "${source:?not set}" \
       "${target:?not set}"
