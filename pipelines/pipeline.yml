@@ -148,6 +148,67 @@ jobs:
               - -c
               - |
                 echo Published rsync as it is part of the Alpine image ((.:alpine-image-digest)) as uhligit/rsync:((.:rsync-image-version))
+  - name: build-httpspell-image
+    plan:
+      - in_parallel:
+        - get: httpspell-image-source
+          trigger: true
+        - get: ruby-image
+          params: { format: oci }
+          trigger: true
+        - get: httpspell-gem
+          trigger: true
+        - get: pandoc-image
+          trigger: true
+        - get: caddy-image
+          trigger: true
+        - get: lib
+        - get: oci-task-image
+      - in_parallel:
+        - load_var: ruby-image-digest
+          file: ruby-image/digest
+        - load_var: httpspell-gem-version
+          file: httpspell-gem/version
+          format: json
+        - load_var: pandoc-image-digest
+          file: pandoc-image/digest
+        - load_var: caddy-image-digest
+          file: caddy-image/digest
+      - task: build-image
+        privileged: true
+        file: lib/tasks/oci/build-image.yml
+        image: oci-task-image
+        input_mapping:
+          source: httpspell-image-source
+          base-image: ruby-image
+        params:
+          CONTEXT: source/images/httpspell
+          BUILD_ARG_HTTPSPELL_VERSION: ((.:httpspell-gem-version.version))
+          IMAGE_ARG_base_image: base-image/image.tar
+        output_mapping: { image: image }
+      - get: httpspell-image-version
+        params: { bump: patch }
+      - load_var: httpspell-image-version
+        file: httpspell-image-version/version
+      - put: httpspell-image
+        params:
+          image: image/image.tar
+          version: ((.:httpspell-image-version))
+          bump_aliases: true
+      - put: httpspell-image-version
+        params: { file: httpspell-image-version/version }
+      - task: print-version-numbers
+        config:
+          platform: linux
+          image_resource:
+            type: mock
+            source: { mirror_self: true }
+          run:
+            path: sh
+            args:
+              - -c
+              - |
+                echo Published ruby image ((.:ruby-image-digest)) with pandoc ((.:pandoc-image-digest)), caddy ((.:caddy-image-digest)) and httpspell v((.:httpspell-gem-version.version)) as uhligit/httpspell:((.:httpspell-image-version))
 resources:
   - name: lib
     type: git
@@ -256,9 +317,61 @@ resources:
     source:
       <<: *dockerhub
       repository: uhligit/rsync
+  - name: ruby-image
+    type: registry-image
+    icon: docker
+    source:
+      <<: *dockerhub
+      repository: ruby
+      tag: alpine
+  - name: httpspell-gem
+    type: http-jq-resource
+    source:
+      base_url: https://rubygems.org/api/v1/gems/httpspell.json
+      jq_filter: "{version: .version}"
+  - name: pandoc-image
+    type: registry-image
+    icon: docker
+    source:
+      <<: *dockerhub
+      repository: pandoc/minimal
+      tag: latest-static
+  - name: caddy-image
+    type: registry-image
+    icon: docker
+    source:
+      <<: *dockerhub
+      repository: caddy
+      tag: alpine
+  - name: httpspell-image-source
+    type: git
+    icon: github-circle
+    source:
+      <<: *github
+      paths: [ images/httpspell/Dockerfile ]
+      fetch_tags: true
+  - name: httpspell-image-version
+    type: semver
+    source:
+      <<: *github
+      driver: git
+      branch: meta
+      file: httpspell-image-version
+      initial_version: 1.0.0
+  - name: httpspell-image
+    type: registry-image
+    icon: docker
+    source:
+      <<: *dockerhub
+      repository: uhligit/httpspell
 resource_types:
   - name: pypi
     type: registry-image
     source:
       repository: uhligit/concourse-pypi-resource
+      tag: latest
+  - name: http-jq-resource
+    type: registry-image
+    source:
+      repository: qudini/concourse-http-jq-resource
       tag: latest

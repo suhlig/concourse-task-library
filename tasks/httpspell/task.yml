@@ -1,0 +1,31 @@
+platform: linux
+image_resource:
+  type: docker-image
+  source: { repository: uhligit/httpspell }
+inputs:
+  - name: lib
+  - name: dictionary
+    optional: true
+  - name: site
+    optional: true
+params: { APP_URL: }
+run:
+  path: zsh
+  args:
+    - -c
+    - |
+      set -euo pipefail
+
+      if [ -d site ]; then
+        caddy start --config lib/tasks/httpspell/Caddyfile
+        trap "caddy stop" EXIT
+        APP_URL=http://localhost:2015
+      fi
+
+      _="${APP_URL:?Missing}"
+
+      if [ -d dictionary ]; then
+        httpspell --personal-dictionary dictionary/*.dic "$APP_URL"
+      else
+        httpspell "$APP_URL"
+      fi
