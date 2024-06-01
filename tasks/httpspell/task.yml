@@ -6,9 +6,14 @@ inputs:
   - name: lib
   - name: dictionary
     optional: true
+  - name: ignorewords
+    optional: true
   - name: site
     optional: true
-params: { APP_URL: }
+params:
+  APP_URL:
+  verbose: false
+  ignorewordsfile:
 run:
   path: zsh
   args:
@@ -22,10 +27,18 @@ run:
         APP_URL=http://localhost:2015
       fi
 
-      _="${APP_URL:?Missing}"
+      optionalArguments=()
 
       if [ -d dictionary ]; then
-        httpspell --personal-dictionary dictionary/*.dic "$APP_URL"
-      else
-        httpspell "$APP_URL"
+        optionalArguments+=("--personal-dictionary=dictionary/*.dic")
       fi
+
+      if [ -d ignorewords ] && [ ! -z $ignorewordsfile ] ; then
+        optionalArguments+=("--ignore=ignorewords/$ignorewordsfile")
+      fi
+
+      if [ "$verbose" = true ]; then
+        optionalArguments+=("--verbose")
+      fi
+
+      httpspell "${optionalArguments[@]}" "${APP_URL:?Missing}"
