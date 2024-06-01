@@ -13,8 +13,6 @@ jobs:
           trigger: true
         - get: lib
         - get: oci-task-image
-      - load_var: python-image-digest
-        file: python-image/digest
       - task: build-image
         privileged: true
         file: lib/tasks/oci/build-image.yml
@@ -26,30 +24,29 @@ jobs:
           CONTEXT: source/images/ansible
           BUILD_ARG_VERSION: ((.:package-info.version))
           IMAGE_ARG_base_image: base-image/image.tar
-        output_mapping: { image: image }
+        output_mapping: { image: ansible-image }
       - get: ansible-image-version
         params: { bump: patch }
       - load_var: ansible-image-version
         file: ansible-image-version/version
       - put: ansible-image
         params:
-          image: image/image.tar
+          image: ansible-image/image.tar
           version: ((.:ansible-image-version))
           bump_aliases: true
       - put: ansible-image-version
         params: { file: ansible-image-version/version }
       - task: print-version-numbers
+        image: ansible-image
         config:
           platform: linux
-          image_resource:
-            type: mock
-            source: { mirror_self: true }
           run:
             path: sh
             args:
               - -c
               - |
-                echo Published Python image ((.:python-image-digest)) and Ansible ((.:package-info.version)) as uhligit/ansible:((.:ansible-image-version))
+                python --version
+                ansible-playbook --version
   - name: build-ginkgo-image
     plan:
       - in_parallel:
@@ -75,33 +72,30 @@ jobs:
           CONTEXT: source/images/ginkgo
           BUILD_ARG_VERSION: v((.:ginkgo-version))
           IMAGE_ARG_base_image: base-image/image.tar
-        output_mapping: { image: image }
+        output_mapping: { image: ginkgo-image }
       - get: ginkgo-image-version
         params: { bump: patch }
       - load_var: ginkgo-image-version
         file: ginkgo-image-version/version
       - put: ginkgo-image
         params:
-          image: image/image.tar
+          image: ginkgo-image/image.tar
           version: ((.:ginkgo-image-version))
           bump_aliases: true
       - put: ginkgo-image-version
         params:
           file: ginkgo-image-version/version
-      - load_var: golang-version
-        file: golang-image/tag
       - task: print-version-numbers
+        image: ginkgo-image
         config:
           platform: linux
-          image_resource:
-            type: mock
-            source: { mirror_self: true }
           run:
             path: sh
             args:
               - -c
               - |
-                echo Published Golang v((.:golang-version)) and Ginkgo v((.:ginkgo-version)) as uhligit/ginkgo:((.:ginkgo-image-version))
+                go version
+                ginkgo version
   - name: build-rsync-image
     plan:
       - get: rsync-image-source
@@ -122,32 +116,28 @@ jobs:
         params:
           CONTEXT: source/images/rsync
           IMAGE_ARG_base_image: base-image/image.tar
-        output_mapping: { image: image }
+        output_mapping: { image: rsync-image }
       - get: rsync-image-version
         params: { bump: patch }
       - load_var: rsync-image-version
         file: rsync-image-version/version
       - put: rsync-image
         params:
-          image: image/image.tar
+          image: rsync-image/image.tar
           version: ((.:rsync-image-version))
           bump_aliases: true
       - put: rsync-image-version
         params: { file: rsync-image-version/version }
-      - load_var: alpine-image-digest
-        file: alpine-image/digest
       - task: print-version-numbers
+        image: rsync-image
         config:
           platform: linux
-          image_resource:
-            type: mock
-            source: { mirror_self: true }
           run:
             path: sh
             args:
               - -c
               - |
-                echo Published rsync as it is part of the Alpine image ((.:alpine-image-digest)) as uhligit/rsync:((.:rsync-image-version))
+                rsync --version
   - name: build-httpspell-image
     plan:
       - in_parallel:
@@ -164,16 +154,9 @@ jobs:
           trigger: true
         - get: lib
         - get: oci-task-image
-      - in_parallel:
-        - load_var: ruby-image-digest
-          file: ruby-image/digest
-        - load_var: httpspell-gem-version
-          file: httpspell-gem/version
-          format: json
-        - load_var: pandoc-image-digest
-          file: pandoc-image/digest
-        - load_var: caddy-image-digest
-          file: caddy-image/digest
+      - load_var: httpspell-gem-version
+        file: httpspell-gem/version
+        format: json
       - task: build-image
         privileged: true
         file: lib/tasks/oci/build-image.yml
@@ -185,30 +168,32 @@ jobs:
           CONTEXT: source/images/httpspell
           BUILD_ARG_HTTPSPELL_VERSION: ((.:httpspell-gem-version.version))
           IMAGE_ARG_base_image: base-image/image.tar
-        output_mapping: { image: image }
+        output_mapping: { image: httpspell-image }
       - get: httpspell-image-version
         params: { bump: patch }
       - load_var: httpspell-image-version
         file: httpspell-image-version/version
       - put: httpspell-image
         params:
-          image: image/image.tar
+          image: httpspell-image/image.tar
           version: ((.:httpspell-image-version))
           bump_aliases: true
       - put: httpspell-image-version
         params: { file: httpspell-image-version/version }
       - task: print-version-numbers
+        image: httpspell-image
         config:
           platform: linux
-          image_resource:
-            type: mock
-            source: { mirror_self: true }
           run:
             path: sh
             args:
               - -c
               - |
-                echo Published ruby image ((.:ruby-image-digest)) with pandoc ((.:pandoc-image-digest)), caddy ((.:caddy-image-digest)) and httpspell v((.:httpspell-gem-version.version)) as uhligit/httpspell:((.:httpspell-image-version))
+                echo Caddy $(caddy version)
+                pandoc --version
+                ruby --version
+                hunspell -vv
+                httpspell --version
 resources:
   - name: lib
     type: git
