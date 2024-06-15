@@ -1,31 +1,23 @@
----
 platform: linux
-
 image_resource:
   type: docker-image
   source: { repository: goreleaser/goreleaser }
-
-inputs:
-  - name: source
-
-params:
-  GITHUB_TOKEN:
-
-outputs:
-  - name: dist
-
+inputs: [ name: source ]
+params: { GITHUB_TOKEN: }
+outputs: [ name: dist ]
 run:
   path: bash
   dir: source
   args:
-  - -c
-  - |
-    set -euo pipefail
+    - -c
+    - |
+      set -euo pipefail
+      IFS=$'\n\t'
 
-    # Trust Concourse to tell which tag is to be built. goreleaser has issues
-    # picking the right tag if two or more point to the same commit.
-    GORELEASER_CURRENT_TAG=$(cat ../source/.git/ref)
-    export GORELEASER_CURRENT_TAG
+      # Trust Concourse to tell which tag is to be built. goreleaser has issues
+      # picking the right tag if two or more point to the same commit.
+      GORELEASER_CURRENT_TAG=$(cat ../source/.git/ref)
+      export GORELEASER_CURRENT_TAG
 
-    goreleaser release
-    cp -R dist/. ../dist/
+      goreleaser release
+      cp -R dist/. ../dist/
