@@ -17,3 +17,12 @@ run:
 
       echo "${SSH_KEY:?not set}" > ssh-config/id
       chmod 600 ssh-config/id
+
+#
+# The public key needs to be present in the target machine's ~/.ssh/authorized_keys file.
+# It can be derived from a private key that is stored in an Ansible vault like this:
+#
+# ansible-vault view deployment/group_vars/all/secrets.yml | yq eval .github.ssh_key - > ~/.ssh/identities/concourse/id_rsa
+# chmod 600 ~/.ssh/identities/concourse/id_rsa
+# ssh-keygen -f ~/.ssh/identities/concourse/id_rsa -y > ~/.ssh/identities/concourse/id_rsa.pub
+# ssh-copy-id -i ~/.ssh/identities/concourse/id_rsa.pub suhlig@shop
