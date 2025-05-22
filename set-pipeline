@@ -5,6 +5,12 @@ IFS=$'\n\t'
 
 SCRIPT_PATH=$(dirname "$(realpath "$0")")
 
+set +u
+if [ -z "$GIT_BRANCH" ]; then
+  GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+fi
+set -u
+
 fly \
   set-pipeline \
   --target "$CONCOURSE_TARGET" \
