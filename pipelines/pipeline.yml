@@ -194,6 +194,48 @@ jobs:
                 ruby --version
                 hunspell -vv
                 httpspell --version
+  - name: build-xz-image
+    plan:
+      - get: xz-image-source
+        trigger: true
+      - in_parallel:
+        - get: lib
+        - get: oci-task-image
+        - get: alpine-image
+          params: { format: oci }
+          trigger: true
+      - task: build-image
+        privileged: true
+        file: lib/tasks/oci/build-image.yml
+        image: oci-task-image
+        input_mapping:
+          source: xz-image-source
+          base-image: alpine-image
+        params:
+          CONTEXT: source/images/xz
+          IMAGE_ARG_base_image: base-image/image.tar
+        output_mapping: { image: xz-image }
+      - get: xz-image-version
+        params: { bump: patch }
+      - load_var: xz-image-version
+        file: xz-image-version/version
+      - put: xz-image
+        params:
+          image: xz-image/image.tar
+          version: ((.:xz-image-version))
+          bump_aliases: true
+      - put: xz-image-version
+        params: { file: xz-image-version/version }
+      - task: print-version-numbers
+        image: xz-image
+        config:
+          platform: linux
+          run:
+            path: sh
+            args:
+              - -c
+              - |
+                xz --version
 resources:
   - name: lib
     type: git
@@ -349,6 +391,27 @@ resources:
     source:
       <<: *dockerhub
       repository: uhligit/httpspell
+  - name: xz-image-source
+    type: git
+    icon: github-circle
+    source:
+      <<: *github
+      paths: [ images/xz/Dockerfile ]
+      fetch_tags: true
+  - name: xz-image-version
+    type: semver
+    source:
+      <<: *github
+      driver: git
+      branch: meta
+      file: xz-image-version
+      initial_version: 1.0.0
+  - name: xz-image
+    type: registry-image
+    icon: docker
+    source:
+      <<: *dockerhub
+      repository: uhligit/xz
 resource_types:
   - name: pypi
     type: registry-image
