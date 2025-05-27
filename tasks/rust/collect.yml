@@ -1,18 +1,16 @@
----
 platform: linux
-
 image_resource:
   type: docker-image
   source: { repository: alpine }
-
 inputs:
   - name: linux
+    optional: true
   - name: windows
+    optional: true
   - name: darwin
-
+    optional: true
 outputs:
   - name: collected
-
 run:
   path: ash
   args:
@@ -20,5 +18,5 @@ run:
     - |
       set -euo pipefail
       for platform in linux windows darwin; do
-        cp "$platform"/* collected
+        cp --update "$platform"/* collected
       done
