@@ -17,6 +17,11 @@ run:
     - -c
     - |
       set -euo pipefail
+
       for platform in linux windows darwin; do
-        cp --update "$platform"/* collected
+        if [ -d "$platform" ] && [ "$(ls -A "$platform")" ]; then
+          cp "$platform"/* collected
+        else
+          echo No files to collect for platform "$platform"
+        fi
       done
