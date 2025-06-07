@@ -11,6 +11,9 @@ if [ -z "$GIT_BRANCH" ]; then
 fi
 set -u
 
+SECRETS=$(ansible-vault view secrets.yml)
+export SECRETS
+
 fly \
   set-pipeline \
   --target "$CONCOURSE_TARGET" \
