@@ -1,6 +1,6 @@
 ARG base_image=ruby:alpine
 ARG PANDOC_VERSION=latest-static
-FROM $base_image as base
+FROM $base_image AS base
 ARG base_image
 RUN apk add \
     gcompat \
@@ -15,13 +15,13 @@ RUN ln -s /usr/share/hunspell/en_US.aff /usr/share/hunspell/en.aff && \
   ln -s /usr/share/hunspell/de_DE.aff /usr/share/hunspell/de.aff && \
   ln -s /usr/share/hunspell/de_DE.dic /usr/share/hunspell/de.dic
 
-FROM pandoc/minimal:$PANDOC_VERSION as pandoc
+FROM pandoc/minimal:$PANDOC_VERSION AS pandoc
 
-FROM caddy:alpine as caddy
+FROM caddy:alpine AS caddy
 
 FROM base
 
-COPY --from=pandoc /pandoc /usr/local/bin/pandoc
+COPY --from=pandoc /usr/local/bin/pandoc /usr/local/bin/pandoc
 COPY --from=caddy /usr/bin/caddy /usr/local/bin/caddy
 
 ARG HTTPSPELL_VERSION=>=0
